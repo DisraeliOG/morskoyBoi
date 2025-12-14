@@ -32,31 +32,18 @@ export class AuthService {
   }
 
   login(email: string, password: string): Observable<boolean> {
-    return this.http.post<{success: boolean, user?: User, message?: string}>(`${this.apiUrl}/login`, { email, password })
+    return this.http.get<User[]>(`${this.apiUrl}?email=${email}&password=${password}`)
       .pipe(
-        map(response => {
-          if (response.success && response.user) {
-            localStorage.setItem('currentUserId', response.user.id!.toString());
-            this.userService.setUser(response.user);
+        map(users => {
+          if (users.length > 0) {
+            const user = users[0];
+            localStorage.setItem('currentUserId', user.id!.toString());
+            this.userService.setUser(user);
             return true;
           }
           return false;
         }),
-        catchError(() => {
-          return this.http.get<User[]>(`${this.apiUrl}?email=${email}&password=${password}`)
-            .pipe(
-              map(users => {
-                if (users.length > 0) {
-                  const user = users[0];
-                  localStorage.setItem('currentUserId', user.id!.toString());
-                  this.userService.setUser(user);
-                  return true;
-                }
-                return false;
-              }),
-              catchError(() => of(false))
-            );
-        })
+        catchError(() => of(false))
       );
   }
 

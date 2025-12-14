@@ -12,13 +12,13 @@
       "email": "b@b.ru",
       "password": "123",
       "wins": 0,
-      "losses": 0
+      "losses": 1
     },
     {
       "id": "9163",
       "email": "usancov@gmail.com",
       "password": "123456",
-      "wins": 6,
+      "wins": 7,
       "losses": 3
     },
     {

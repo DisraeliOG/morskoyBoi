@@ -8,7 +8,7 @@
 
           <div class="mb-3">
             <label for="email" class="form-label">Email</label>
-            <input formControlName="email" type="email" class="form-control"
+            <input id="email" formControlName="email" type="email" class="form-control"
                    [ngClass]="{'is-invalid': registerForm.get('email')?.invalid && registerForm.get('email')?.touched}">
             <div *ngIf="registerForm.get('email')?.touched" class="invalid-feedback">
               <div *ngIf="registerForm.get('email')?.errors?.['required']">Email обязателен.</div>
@@ -18,7 +18,7 @@
 
           <div class="mb-3">
             <label for="password" class="form-label">Пароль</label>
-            <input formControlName="password" type="password" class="form-control"
+            <input id="password" formControlName="password" type="password" class="form-control"
                    [ngClass]="{'is-invalid': registerForm.get('password')?.invalid && registerForm.get('password')?.touched}">
             <div *ngIf="registerForm.get('password')?.touched" class="invalid-feedback">
               <div *ngIf="registerForm.get('password')?.errors?.['required']">Пароль обязателен.</div>
@@ -28,7 +28,7 @@
 
           <div class="mb-3">
             <label for="confirmPassword" class="form-label">Подтверждение пароля</label>
-            <input formControlName="confirmPassword" type="password" class="form-control"
+            <input id="confirmPassword" formControlName="confirmPassword" type="password" class="form-control"
                    [ngClass]="{'is-invalid': registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched}">
 
             <div *ngIf="registerForm.get('confirmPassword')?.touched" class="invalid-feedback">
