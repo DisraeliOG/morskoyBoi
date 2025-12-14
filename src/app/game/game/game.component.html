@@ -1,0 +1,153 @@
+<div class="game-container">
+
+  <div *ngIf="game() as currentGame" class="mb-4">
+    <ng-container *ngIf="currentGame.player1Id === myId || currentGame.player2Id === myId">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4>Текущая игра</h4>
+        <button class="btn btn-outline-danger btn-sm" (click)="leaveGame()">
+          Выйти из игры
+        </button>
+      </div>
+    </ng-container>
+  </div>
+
+  <div class="mb-4">
+    <div class="section-header">
+      <h5 class="section-title">Открытые игры</h5>
+      <div class="section-actions">
+        <button class="btn btn-success btn-sm" (click)="startGame()" [disabled]="!myId || game() !== null">
+          Создать игру
+        </button>
+        <button class="btn btn-outline-primary btn-sm" (click)="refreshWaiting()">
+          Обновить
+        </button>
+      </div>
+    </div>
+
+    <p *ngIf="waitingGames().length === 0" class="text-muted empty-state">Нет открытых игр. Создайте новую игру или подождите, пока кто-то создаст.</p>
+    <ul class="list-group" *ngIf="waitingGames().length > 0">
+      <li class="list-group-item game-item"
+          *ngFor="let g of waitingGames(); trackBy: trackByGameId">
+        <div class="game-item-info">
+          <div class="game-item-creator"><strong>Создатель:</strong> {{ g.player1Email || g.player1Id }}</div>
+          <div class="text-muted small">Игра #{{ g.id }}</div>
+        </div>
+        <button class="btn btn-sm btn-primary"
+                (click)="joinGame(g.id!)"
+                [disabled]="game() !== null">
+          Присоединиться
+        </button>
+      </li>
+    </ul>
+  </div>
+
+  <div *ngIf="!game()" class="placement-section mt-4">
+    <h5 class="mb-3">Расстановка кораблей</h5>
+    <div class="row">
+      <div class="col-md-8">
+        <div class="placement-board-container">
+          <div class="board-header">
+            <div class="col-header">
+              <span></span>
+              <span *ngFor="let col of placementCols">{{ col + 1 }}</span>
+            </div>
+          </div>
+          <div class="board-row" *ngFor="let row of placementRows">
+            <div class="row-header">{{ getRowLetter(row) }}</div>
+            <div
+              *ngFor="let col of placementCols"
+              class="cell"
+              [ngClass]="getPlacementCellClass(getPlacementCellIndex(row, col))"
+              (mouseenter)="onPlacementCellHover(row, col)"
+              (click)="onPlacementCellClick(row, col)">
+            </div>
+          </div>
+        </div>
+        <div class="mt-3 d-flex gap-2 justify-content-center">
+          <button class="btn btn-secondary" (click)="toggleOrientation()">
+            {{ selectedOrientation === 'horizontal' ? '↔ Горизонтально' : '↕ Вертикально' }}
+          </button>
+          <button class="btn btn-warning" (click)="resetPlacementBoard()">Сбросить</button>
+        </div>
+        <div class="mt-2 text-center">
+          <small class="text-muted">
+            {{ isAllShipsPlaced() ? '✓ Все корабли расставлены' : 'Расставьте все корабли или они будут размещены случайно' }}
+          </small>
+        </div>
+      </div>
+
+      <div class="col-md-4">
+        <div class="ship-list">
+          <h6>Флот</h6>
+          <div class="ship-item"
+               *ngFor="let ship of shipTypes"
+               [class.selected]="selectedShip === ship"
+               [class.disabled]="ship.placed >= ship.count"
+               (click)="selectShip(ship)">
+            <div class="ship-info">
+              <strong>{{ ship.name }}</strong>
+              <span class="badge">{{ ship.placed }} / {{ ship.count }}</span>
+            </div>
+            <div class="ship-preview">
+              <div class="ship-cell" *ngFor="let i of getShipLengthArray(ship.length)"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div *ngIf="game() as game" class="row">
+    <ng-container *ngIf="game.player1Id === myId || game.player2Id === myId">
+      <div class="col-12 text-center mb-3" *ngIf="game.status === 'waiting'">
+        <div class="alert alert-warning">
+          Ожидаем второго игрока...
+          <div *ngIf="game.player1Email">Создатель: {{ game.player1Email }}</div>
+        </div>
+      </div>
+
+    <div class="game-header">
+      <div class="game-players" *ngIf="game.player1Email || game.player2Email">
+        <span class="player-name">{{ game.player1Email || game.player1Id }}</span>
+        <span class="vs-divider">VS</span>
+        <span class="player-name">{{ game.player2Email || game.player2Id || 'ожидание' }}</span>
+      </div>
+      <div class="game-turn">
+        <span class="turn-label">Текущий ход:</span>
+        <span class="turn-player" [class.your-turn]="game.turn === myId" [class.enemy-turn]="game.turn !== myId">
+          {{ game.turn === myId ? 'ВЫ' : 'ПРОТИВНИК' }}
+        </span>
+      </div>
+      <div class="game-status" *ngIf="game.status === 'finished'">
+        <p class="game-finished">
+          Игра окончена!
+          <strong [class.winner]="game.winnerId === myId" [class.loser]="game.winnerId !== myId">
+            {{ game.winnerId === myId ? 'ВЫ ПОБЕДИЛИ!' : 'ВЫ ПРОИГРАЛИ' }}
+          </strong>
+        </p>
+      </div>
+    </div>
+
+    <div class="game-boards">
+      <div class="board-section">
+        <h4 class="board-title">Доска противника</h4>
+        <app-board
+          [cells]="enemyBoard"
+          [isEnemy]="true"
+          [disabled]="game.turn !== myId || game.status !== 'active'"
+          (cellClick)="fire($event)">
+        </app-board>
+      </div>
+
+      <div class="board-section">
+        <h4 class="board-title">Ваша доска</h4>
+        <app-board
+          [cells]="myBoard"
+          [isEnemy]="false"
+          [disabled]="true">
+        </app-board>
+      </div>
+    </div>
+    </ng-container>
+  </div>
+</div>

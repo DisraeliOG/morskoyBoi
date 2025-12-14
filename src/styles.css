@@ -1,0 +1,639 @@
+/* ============================================
+   Глобальные стили - Морской бой
+   Минималистичный дизайн в стиле iOS
+   ============================================ */
+
+/* Импорт шрифтов */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+/* CSS переменные для цветовой схемы */
+:root {
+  /* Основные цвета */
+  --primary-color: #007AFF;        /* iOS синий */
+  --primary-light: #5AC8FA;        
+  --primary-dark: #0051D5;         
+  --secondary-color: #5856D6;      
+  --accent-color: #FF9500;         
+  --success-color: #34C759;        
+  --danger-color: #FF3B30;         
+  --warning-color: #FF9500;        
+  
+  /* Нейтральные цвета */
+  --bg-primary: #F2F2F7;           /* iOS серый фон */
+  --bg-secondary: #FFFFFF;         /* Белый */
+  --bg-tertiary: rgba(255, 255, 255, 0.8); /* Полупрозрачный белый */
+  --text-primary: #000000;         /* Черный текст */
+  --text-secondary: #8E8E93;       /* Серый текст */
+  --text-tertiary: #C7C7CC;        /* Светло-серый текст */
+  --border-color: #E5E5EA;         /* Цвет границ */
+  
+  /* Тени iOS */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.12);
+  --shadow-md: 0 2px 8px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 4px 16px rgba(0, 0, 0, 0.2);
+  
+  /* Радиусы iOS */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  
+  /* Отступы */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  
+  /* Шрифты */
+  --font-primary: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+}
+
+/* Сброс стилей */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-primary);
+  font-size: 1rem;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--bg-primary);
+  min-height: 100vh;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Типографика */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--text-primary);
+  margin-bottom: var(--spacing-md);
+}
+
+h1 { font-size: 2rem; }
+h2 { font-size: 1.75rem; }
+h3 { font-size: 1.5rem; }
+h4 { font-size: 1.25rem; }
+h5 { font-size: 1.125rem; }
+h6 { font-size: 1rem; }
+
+p {
+  margin-bottom: var(--spacing-md);
+  color: var(--text-secondary);
+}
+
+/* Ссылки */
+a {
+  color: var(--primary-color);
+  text-decoration: none;
+  transition: opacity 0.2s ease;
+}
+
+a:hover {
+  opacity: 0.7;
+}
+
+/* Кнопки - iOS стиль */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 24px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  text-align: center;
+  border: none;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: var(--font-primary);
+  white-space: nowrap;
+  min-height: 44px; /* iOS минимальный размер для касания */
+}
+
+.btn:hover {
+  opacity: 0.8;
+  transform: scale(0.98);
+}
+
+.btn:active {
+  transform: scale(0.96);
+  opacity: 0.6;
+}
+
+.btn-primary,
+.btn-success {
+  background: var(--primary-color);
+  color: white;
+}
+
+.btn-primary:hover,
+.btn-success:hover {
+  background: var(--primary-dark);
+  color: white;
+}
+
+.btn-outline-primary {
+  background: transparent;
+  border: 1.5px solid var(--primary-color);
+  color: var(--primary-color);
+}
+
+.btn-outline-primary:hover {
+  background: var(--primary-color);
+  color: white;
+}
+
+.btn-outline-danger {
+  background: transparent;
+  border: 1.5px solid var(--danger-color);
+  color: var(--danger-color);
+}
+
+.btn-outline-danger:hover {
+  background: var(--danger-color);
+  color: white;
+}
+
+.btn-secondary {
+  background: var(--text-secondary);
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: var(--text-primary);
+  color: white;
+}
+
+.btn-warning {
+  background: var(--warning-color);
+  color: white;
+}
+
+.btn-warning:hover {
+  background: #E68900;
+  color: white;
+}
+
+.btn-sm {
+  padding: 8px 16px;
+  font-size: 0.875rem;
+  min-height: 36px;
+}
+
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Карточки - iOS стиль */
+.card {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-sm);
+  padding: var(--spacing-lg);
+  margin-bottom: var(--spacing-lg);
+  border: 0.5px solid var(--border-color);
+}
+
+/* Формы - iOS стиль */
+.form-control {
+  width: 100%;
+  padding: 12px 16px;
+  font-size: 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+  font-family: var(--font-primary);
+  background: var(--bg-secondary);
+  min-height: 44px;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 3px rgba(0, 122, 255, 0.1);
+}
+
+.form-label {
+  display: block;
+  margin-bottom: var(--spacing-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+  font-size: 0.875rem;
+}
+
+/* Алерты - iOS стиль */
+.alert {
+  padding: var(--spacing-md);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--spacing-md);
+  border: 0.5px solid;
+  font-size: 0.9375rem;
+}
+
+.alert-info {
+  background: rgba(0, 122, 255, 0.1);
+  border-color: rgba(0, 122, 255, 0.3);
+  color: var(--primary-dark);
+}
+
+.alert-warning {
+  background: rgba(255, 149, 0, 0.1);
+  border-color: rgba(255, 149, 0, 0.3);
+  color: #CC7700;
+}
+
+.alert-success {
+  background: rgba(52, 199, 89, 0.1);
+  border-color: rgba(52, 199, 89, 0.3);
+  color: #248A3D;
+}
+
+.alert-danger {
+  background: rgba(255, 59, 48, 0.1);
+  border-color: rgba(255, 59, 48, 0.3);
+  color: #CC2E24;
+}
+
+/* Таблицы - iOS стиль */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  box-shadow: var(--shadow-sm);
+  border: 0.5px solid var(--border-color);
+}
+
+.table thead {
+  background: var(--bg-primary);
+}
+
+.table th {
+  padding: var(--spacing-md);
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.table td {
+  padding: var(--spacing-md);
+  border-bottom: 0.5px solid var(--border-color);
+  font-size: 0.9375rem;
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.table tbody tr:hover {
+  background: var(--bg-primary);
+}
+
+.table-striped tbody tr:nth-child(even) {
+  background: var(--bg-primary);
+}
+
+.table-success {
+  background: rgba(52, 199, 89, 0.05);
+}
+
+/* Списки - iOS стиль */
+.list-group {
+  list-style: none;
+  padding: 0;
+}
+
+.list-group-item {
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-sm);
+  background: var(--bg-secondary);
+  border: 0.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-sm);
+}
+
+.list-group-item:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--primary-color);
+}
+
+/* Контейнеры */
+.main-content {
+  min-height: calc(100vh - 60px);
+  padding: var(--spacing-lg) 0;
+}
+
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 var(--spacing-md);
+}
+
+/* Утилиты */
+.text-center {
+  text-align: center;
+}
+
+.text-muted {
+  color: var(--text-secondary);
+}
+
+.small {
+  font-size: 0.8125rem;
+  color: var(--text-secondary);
+}
+
+.mt-1 { margin-top: var(--spacing-xs); }
+.mt-2 { margin-top: var(--spacing-sm); }
+.mt-3 { margin-top: var(--spacing-md); }
+.mt-4 { margin-top: var(--spacing-lg); }
+.mt-5 { margin-top: var(--spacing-xl); }
+
+.mb-1 { margin-bottom: var(--spacing-xs); }
+.mb-2 { margin-bottom: var(--spacing-sm); }
+.mb-3 { margin-bottom: var(--spacing-md); }
+.mb-4 { margin-bottom: var(--spacing-lg); }
+.mb-5 { margin-bottom: var(--spacing-xl); }
+
+.d-flex {
+  display: flex;
+}
+
+.gap-2 {
+  gap: var(--spacing-sm);
+}
+
+.justify-content-center {
+  justify-content: center;
+}
+
+.justify-content-between {
+  justify-content: space-between;
+}
+
+.align-items-center {
+  align-items: center;
+}
+
+.w-100 {
+  width: 100%;
+}
+
+/* Анимации */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Стили для навбара - iOS стиль */
+.navbar {
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  box-shadow: 0 1px 0 0 rgba(0, 0, 0, 0.1);
+  border-bottom: 0.5px solid rgba(0, 0, 0, 0.1);
+  padding: var(--spacing-sm) 0;
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+}
+
+.navbar-brand {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--text-primary) !important;
+  padding: var(--spacing-sm) 0;
+}
+
+.nav-link {
+  color: var(--text-primary) !important;
+  font-weight: 400;
+  transition: all 0.2s ease;
+  padding: var(--spacing-sm) var(--spacing-md) !important;
+  border-radius: var(--radius-sm);
+  margin: 0 2px;
+  font-size: 0.9375rem;
+}
+
+.nav-link:hover {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--primary-color) !important;
+}
+
+.nav-link.active {
+  background: rgba(0, 122, 255, 0.1);
+  color: var(--primary-color) !important;
+  font-weight: 500;
+}
+
+.nav-link.disabled {
+  color: var(--text-secondary) !important;
+  opacity: 1;
+}
+
+/* Стили для игрового контейнера */
+.game-container {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-sm);
+  border: 0.5px solid var(--border-color);
+  margin: var(--spacing-lg) 0;
+  max-width: 100%;
+}
+
+/* Стили для страниц входа/регистрации */
+.card {
+  max-width: 420px;
+  margin: var(--spacing-xl) auto;
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+  padding: var(--spacing-xl);
+  border: 0.5px solid var(--border-color);
+}
+
+/* Стили для статистики */
+.dashboard-container {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-xl);
+  box-shadow: var(--shadow-sm);
+  border: 0.5px solid var(--border-color);
+  margin: var(--spacing-lg) 0;
+}
+
+/* Кастомный скроллбар - iOS стиль */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.3);
+}
+
+/* Улучшенные стили для инвалидных элементов */
+.invalid-feedback {
+  color: var(--danger-color);
+  font-size: 0.8125rem;
+  margin-top: var(--spacing-xs);
+  display: block;
+}
+
+.is-invalid {
+  border-color: var(--danger-color) !important;
+}
+
+/* Бейджи - iOS стиль */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 4px 10px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 12px;
+  background: var(--primary-color);
+  color: white;
+  min-width: 20px;
+  height: 20px;
+}
+
+/* Адаптивность */
+@media (max-width: 340px) {
+  html {
+    font-size: 12px;
+  }
+  
+  h1 { font-size: 1.5rem; }
+  h2 { font-size: 1.25rem; }
+  h3 { font-size: 1.125rem; }
+  
+  .container {
+    padding: 0 var(--spacing-xs);
+  }
+  
+  .btn {
+    padding: 8px 16px;
+    font-size: 0.8125rem;
+    min-height: 36px;
+  }
+  
+  .game-container {
+    padding: var(--spacing-sm);
+  }
+  
+  .card {
+    padding: var(--spacing-md);
+    margin: var(--spacing-sm);
+  }
+}
+
+@media (max-width: 768px) {
+  html {
+    font-size: 14px;
+  }
+  
+  h1 { font-size: 1.75rem; }
+  h2 { font-size: 1.5rem; }
+  h3 { font-size: 1.25rem; }
+  
+  .container {
+    padding: 0 var(--spacing-sm);
+  }
+  
+  .btn {
+    padding: 10px 20px;
+    font-size: 0.875rem;
+  }
+  
+  .game-container {
+    padding: var(--spacing-md);
+  }
+  
+  .card {
+    padding: var(--spacing-lg);
+    margin: var(--spacing-md);
+  }
+  
+  .navbar {
+    padding: var(--spacing-xs) 0;
+  }
+  
+  .nav-link {
+    padding: var(--spacing-xs) var(--spacing-sm) !important;
+    font-size: 0.875rem;
+  }
+}
+
+/* Улучшения для средних экранов */
+@media (min-width: 1024px) and (max-width: 1399px) {
+  .game-boards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Улучшения для больших экранов */
+@media (min-width: 1400px) {
+  .container {
+    max-width: 1400px;
+  }
+  
+  .game-container {
+    padding: var(--spacing-xl) calc(var(--spacing-xl) * 1.5);
+  }
+  
+  .game-boards {
+    grid-template-columns: repeat(2, 1fr);
+    max-width: 1200px;
+    margin: var(--spacing-xl) auto;
+  }
+}
+
+@media (min-width: 1920px) {
+  .container {
+    max-width: 1600px;
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "email": "a@a.ru",
+      "password": "123",
+      "wins": 1,
+      "losses": 1
+    },
+    {
+      "id": "2",
+      "email": "b@b.ru",
+      "password": "123",
+      "wins": 0,
+      "losses": 0
+    },
+    {
+      "id": "9163",
+      "email": "usancov@gmail.com",
+      "password": "123456",
+      "wins": 6,
+      "losses": 3
+    },
+    {
+      "id": "611c",
+      "email": "leonid@gmail.com",
+      "password": "654321",
+      "wins": 0,
+      "losses": 0
+    }
+  ],
+  "games": []
+}

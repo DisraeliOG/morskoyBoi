@@ -1,0 +1,38 @@
+<nav class="navbar navbar-expand-lg">
+  <div class="container">
+    <a class="navbar-brand" routerLink="/">⚓ Морской бой</a>
+
+    <div class="navbar-nav-container">
+      <ul class="navbar-nav-left">
+        <li class="nav-item" *ngIf="isLoggedIn">
+          <a class="nav-link" routerLink="/game" routerLinkActive="active">Играть</a>
+        </li>
+        <li class="nav-item" *ngIf="isLoggedIn">
+          <a class="nav-link" routerLink="/dashboard" routerLinkActive="active">Статистика</a>
+        </li>
+      </ul>
+
+      <ul class="navbar-nav-right">
+        <ng-container *ngIf="!isLoggedIn">
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/login" routerLinkActive="active">Вход</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" routerLink="/register" routerLinkActive="active">Регистрация</a>
+          </li>
+        </ng-container>
+
+        <ng-container *ngIf="isLoggedIn">
+          <li class="nav-item user-info">
+            <span class="nav-link disabled">
+              {{ currentUser?.email }}
+            </span>
+          </li>
+          <li class="nav-item">
+            <button class="btn btn-outline-danger btn-sm" (click)="logout()">Выход</button>
+          </li>
+        </ng-container>
+      </ul>
+    </div>
+  </div>
+</nav>

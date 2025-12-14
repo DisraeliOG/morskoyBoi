@@ -1,0 +1,51 @@
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-md-6">
+      <div class="card p-4">
+        <h2 class="text-center">📝 Регистрация</h2>
+
+        <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
+
+          <div class="mb-3">
+            <label for="email" class="form-label">Email</label>
+            <input formControlName="email" type="email" class="form-control"
+                   [ngClass]="{'is-invalid': registerForm.get('email')?.invalid && registerForm.get('email')?.touched}">
+            <div *ngIf="registerForm.get('email')?.touched" class="invalid-feedback">
+              <div *ngIf="registerForm.get('email')?.errors?.['required']">Email обязателен.</div>
+              <div *ngIf="registerForm.get('email')?.errors?.['email']">Некорректный формат email.</div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="password" class="form-label">Пароль</label>
+            <input formControlName="password" type="password" class="form-control"
+                   [ngClass]="{'is-invalid': registerForm.get('password')?.invalid && registerForm.get('password')?.touched}">
+            <div *ngIf="registerForm.get('password')?.touched" class="invalid-feedback">
+              <div *ngIf="registerForm.get('password')?.errors?.['required']">Пароль обязателен.</div>
+              <div *ngIf="registerForm.get('password')?.errors?.['minlength']">Минимум 6 символов.</div>
+            </div>
+          </div>
+
+          <div class="mb-3">
+            <label for="confirmPassword" class="form-label">Подтверждение пароля</label>
+            <input formControlName="confirmPassword" type="password" class="form-control"
+                   [ngClass]="{'is-invalid': registerForm.get('confirmPassword')?.invalid && registerForm.get('confirmPassword')?.touched}">
+
+            <div *ngIf="registerForm.get('confirmPassword')?.touched" class="invalid-feedback">
+              <div *ngIf="registerForm.get('confirmPassword')?.errors?.['required']">Подтверждение обязательно.</div>
+              <div *ngIf="registerForm.get('confirmPassword')?.errors?.['passwordMismatch']">Пароли не совпадают!</div>
+            </div>
+          </div>
+
+          <button type="submit" [disabled]="registerForm.invalid" class="btn btn-success w-100">
+            Зарегистрироваться
+          </button>
+        </form>
+
+        <p class="mt-3 text-center">
+          Уже есть аккаунт? <a routerLink="/login">Войти</a>
+        </p>
+      </div>
+    </div>
+  </div>
+</div>

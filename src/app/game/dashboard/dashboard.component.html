@@ -1,0 +1,52 @@
+<div class="container mt-4">
+  <h2>📊 Статистика и таблица лидеров</h2>
+
+  <div class="row">
+
+    <div class="col-md-6 mb-4">
+      <h4>Моя статистика (Победы vs Поражения)</h4>
+
+      <div *ngIf="currentUser as user">
+        <p>
+          Всего игр: <strong>{{ user.wins + user.losses }}</strong> |
+          Побед: <strong>{{ user.wins }}</strong> |
+          Поражений: <strong>{{ user.losses }}</strong>
+        </p>
+
+        <div style="display: block; position: relative; height: 300px; width: 300px; margin: 0 auto;">
+          <canvas
+            baseChart
+            [data]="pieChartData"
+            [options]="pieChartOptions"
+            [type]="pieChartType"
+            [legend]="true">
+          </canvas>
+        </div>
+      </div>
+      <p *ngIf="!currentUser">Для просмотра статистики необходимо авторизоваться.</p>
+    </div>
+
+    <div class="col-md-6 mb-4">
+      <h4>Таблица лидеров</h4>
+      <table class="table table-striped">
+        <thead>
+        <tr>
+          <th>#</th>
+          <th>Email</th>
+          <th>Победы</th>
+          <th>Поражения</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr *ngFor="let user of usersList(); trackBy: trackByUserId; let i = index"
+            [class.table-success]="user.id === currentUser?.id">
+          <td>{{ i + 1 }}</td>
+          <td>{{ user.email }}</td>
+          <td>{{ user.wins }}</td>
+          <td>{{ user.losses }}</td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

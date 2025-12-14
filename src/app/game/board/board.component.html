@@ -1,0 +1,14 @@
+<div class="board-container" [class.disabled-board]="disabled">
+  <div class="board-grid">
+    <div *ngFor="let row of rows; let r = index" class="board-row">
+      <div *ngFor="let col of cols; let c = index"
+           class="board-cell"
+           [class]="getCellClass(cells[getCellIndex(r, c)])"
+           (click)="onCellClick(getCellIndex(r, c))">
+        <span *ngIf="cells[getCellIndex(r, c)].status === 'hit'">X</span>
+        <span *ngIf="cells[getCellIndex(r, c)].status === 'sunk'" class="sunk-cross">✕</span>
+        <span *ngIf="cells[getCellIndex(r, c)].status === 'miss'">.</span>
+      </div>
+    </div>
+  </div>
+</div>
