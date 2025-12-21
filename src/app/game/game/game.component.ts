@@ -4,6 +4,7 @@ import {BoardComponent} from '../board/board.component';
 import {Game, GameService, Cell} from '../../services/game.service';
 import {UserService} from '../../services/user.service';
 import {signal, WritableSignal as NgWritableSignal} from '@angular/core';
+import {ActivatedRoute, Router} from '@angular/router';
 
 @Component({
   selector: 'app-game',
@@ -22,6 +23,8 @@ export class GameComponent implements OnInit, OnDestroy {
 
   game: WritableSignal<Game | null>;
   waitingGames: NgWritableSignal<Game[]> = signal([]);
+  networkErrorMessage: string = '';
+  shareLink: string = '';
   
   placementBoard: Cell[] = [];
   selectedShip: { length: number; count: number; name: string; placed: number } | null = null;
@@ -40,21 +43,60 @@ export class GameComponent implements OnInit, OnDestroy {
   placementCols = Array(10).fill(0).map((x, i) => i);
 
   private gameUpdateInterval: any;
+  private onlineHandler?: () => void;
+  private offlineHandler?: () => void;
 
   constructor(
     protected gameService: GameService,
-    private userService: UserService
+    private userService: UserService,
+    private route: ActivatedRoute,
+    private router: Router
   ) {
     this.game = this.gameService.game;
-    this.myId = this.userService.currentUser()?.id?.toString();
-    this.myEmail = this.userService.currentUser()?.email;
+    const user = this.userService.currentUser();
+    if (user) {
+      if (user.isGuest) {
+        const guestId = this.userService.getGuestId() || `guest_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+        this.myId = guestId;
+        this.myEmail = user.email;
+      } else {
+        this.myId = user.id?.toString();
+        this.myEmail = user.email;
+      }
+    }
   }
 
   ngOnInit() {
-    const latestId = this.userService.currentUser()?.id?.toString();
-    const latestEmail = this.userService.currentUser()?.email;
-    if (latestId) this.myId = latestId;
-    if (latestEmail) this.myEmail = latestEmail;
+    const user = this.userService.currentUser();
+    if (!user) {
+      this.userService.setGuestUser();
+    }
+    
+    const currentUser = this.userService.currentUser();
+    if (currentUser) {
+      if (currentUser.isGuest) {
+        const guestId = this.userService.getGuestId() || `guest_${Date.now()}_${Math.random().toString(36).substring(2, 15)}`;
+        this.myId = guestId;
+        this.myEmail = currentUser.email;
+      } else {
+        this.myId = currentUser.id?.toString();
+        this.myEmail = currentUser.email;
+      }
+    }
+
+    this.route.queryParams.subscribe(params => {
+      const joinGameId = params['join'];
+      if (joinGameId && this.myId) {
+        const isAllPlaced = this.isAllShipsPlaced();
+        const boardToUse = isAllPlaced ? [...this.placementBoard] : null;
+        if (boardToUse) {
+          this.gameService.joinByLink(joinGameId, this.myId, this.myEmail ?? '', boardToUse);
+        } else {
+          this.gameService.joinByLink(joinGameId, this.myId, this.myEmail ?? '');
+        }
+        this.router.navigate(['/game'], { replaceUrl: true });
+      }
+    });
 
     const current = this.game();
     if (current && this.myId &&
@@ -66,11 +108,47 @@ export class GameComponent implements OnInit, OnDestroy {
     this.resetPlacementBoard();
     this.refreshWaiting();
 
+    const currentGame = this.game();
+    if (currentGame && currentGame.id) {
+      if (currentGame.shareLink) {
+        this.shareLink = currentGame.shareLink;
+      } else {
+        this.shareLink = this.gameService.generateShareLink(currentGame.id);
+      }
+    }
+
+    this.onlineHandler = () => {
+      this.networkErrorMessage = '';
+      this.refreshWaiting();
+    };
+    
+    this.offlineHandler = () => {
+      this.networkErrorMessage = 'Нет подключения к интернету. Проверьте соединение.';
+    };
+    
+    window.addEventListener('online', this.onlineHandler);
+    window.addEventListener('offline', this.offlineHandler);
+
     this.gameUpdateInterval = setInterval(() => {
+      if (!navigator.onLine) {
+        this.networkErrorMessage = 'Нет подключения к интернету. Проверьте соединение.';
+        return;
+      }
+      
       const currentGame = this.game();
-      if (currentGame && this.myId && 
-          (currentGame.player1Id === this.myId || currentGame.player2Id === this.myId)) {
-        this.gameService.getGameUpdates(this.myId);
+      if (currentGame) {
+        if (currentGame.id) {
+          if (currentGame.shareLink) {
+            this.shareLink = currentGame.shareLink;
+          } else {
+            this.shareLink = this.gameService.generateShareLink(currentGame.id);
+          }
+        }
+        
+        if (this.myId && 
+            (currentGame.player1Id === this.myId || currentGame.player2Id === this.myId)) {
+          this.gameService.getGameUpdates(this.myId);
+        }
       }
       this.refreshWaiting(false);
     }, 3000);
@@ -79,6 +157,12 @@ export class GameComponent implements OnInit, OnDestroy {
   ngOnDestroy() {
     if (this.gameUpdateInterval) {
       clearInterval(this.gameUpdateInterval);
+    }
+    if (this.onlineHandler) {
+      window.removeEventListener('online', this.onlineHandler);
+    }
+    if (this.offlineHandler) {
+      window.removeEventListener('offline', this.offlineHandler);
     }
   }
 
@@ -287,16 +371,42 @@ export class GameComponent implements OnInit, OnDestroy {
   }
 
   refreshWaiting(withClear: boolean = true) {
-    if (withClear) this.waitingGames.set([]);
-    this.gameService.listWaitingGames().subscribe(g => {
-      const filtered = g.filter(game => 
-        game.player1Id !== this.myId && game.player2Id !== this.myId
-      );
-      this.waitingGames.set(filtered);
+    if (withClear) {
+      this.waitingGames.set([]);
+      this.networkErrorMessage = '';
+    }
+    
+    if (!navigator.onLine) {
+      this.networkErrorMessage = 'Нет подключения к интернету. Проверьте соединение.';
+      return;
+    }
+    
+    this.gameService.listWaitingGames().subscribe({
+      next: (g) => {
+        this.networkErrorMessage = '';
+        const filtered = g.filter(game => 
+          game.player1Id !== this.myId && game.player2Id !== this.myId
+        );
+        this.waitingGames.set(filtered);
+      },
+      error: (error) => {
+        if (error.status === 0 || !navigator.onLine) {
+          this.networkErrorMessage = 'Нет подключения к интернету. Проверьте соединение и убедитесь, что сервер запущен.';
+        } else {
+          this.networkErrorMessage = 'Ошибка при загрузке списка игр. Попробуйте обновить страницу.';
+        }
+      }
     });
   }
 
   leaveGame() {
+    if (!navigator.onLine) {
+      this.networkErrorMessage = 'Нет подключения к интернету. Проверьте соединение.';
+      this.gameService.game.set(null);
+      return;
+    }
+    
+    this.networkErrorMessage = '';
     this.gameService.leaveGame();
     this.refreshWaiting();
   }
@@ -311,5 +421,26 @@ export class GameComponent implements OnInit, OnDestroy {
 
   getRowLetter(row: number): string {
     return String.fromCharCode(65 + row);
+  }
+
+  copyShareLink() {
+    const input = document.getElementById('shareLinkInput') as HTMLInputElement;
+    if (input) {
+      input.select();
+      input.setSelectionRange(0, 99999);
+      document.execCommand('copy');
+      const button = event?.target as HTMLButtonElement;
+      if (button) {
+        const originalText = button.textContent;
+        button.textContent = 'Скопировано!';
+        button.classList.add('btn-success');
+        button.classList.remove('btn-primary');
+        setTimeout(() => {
+          button.textContent = originalText;
+          button.classList.remove('btn-success');
+          button.classList.add('btn-primary');
+        }, 2000);
+      }
+    }
   }
 }

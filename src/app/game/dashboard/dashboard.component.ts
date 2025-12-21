@@ -20,6 +20,7 @@ Chart.register(...registerables);
 export class DashboardComponent implements OnInit {
 
   usersList: WritableSignal<User[]> = signal([]);
+  errorMessage: string = '';
 
   public pieChartOptions: ChartConfiguration['options'] = {
     responsive: true,
@@ -69,6 +70,7 @@ export class DashboardComponent implements OnInit {
   }
 
   loadLeaderboard() {
+    this.errorMessage = '';
     this.http.get<User[]>('http://localhost:3000/users').subscribe({
       next: (users) => {
         const sortedUsers = users.sort((a, b) => b.wins - a.wins);
@@ -76,6 +78,13 @@ export class DashboardComponent implements OnInit {
       },
       error: (error) => {
         console.error('Ошибка при загрузке таблицы лидеров:', error);
+        if (error.status === 0 || error.status === 504 || error.status === 408) {
+          this.errorMessage = 'Нет подключения к интернету. Проверьте соединение.';
+        } else if (error.status >= 500) {
+          this.errorMessage = 'Ошибка сервера. Попробуйте позже.';
+        } else {
+          this.errorMessage = 'Ошибка при загрузке данных. Попробуйте обновить страницу.';
+        }
       }
     });
   }

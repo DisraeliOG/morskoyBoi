@@ -4,6 +4,14 @@
       <div class="card p-4">
         <h2 class="text-center">📝 Регистрация</h2>
 
+        <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
+          {{ errorMessage }}
+        </div>
+
+        <div *ngIf="successMessage" class="alert alert-success" role="alert">
+          {{ successMessage }}
+        </div>
+
         <form [formGroup]="registerForm" (ngSubmit)="onSubmit()">
 
           <div class="mb-3">
@@ -37,8 +45,9 @@
             </div>
           </div>
 
-          <button type="submit" [disabled]="registerForm.invalid" class="btn btn-success w-100">
-            Зарегистрироваться
+          <button type="submit" [disabled]="registerForm.invalid || isLoading" class="btn btn-success w-100">
+            <span *ngIf="isLoading">Регистрация...</span>
+            <span *ngIf="!isLoading">Зарегистрироваться</span>
           </button>
         </form>
 

@@ -35,6 +35,15 @@ export class NavbarComponent {
     return !!this.currentUser;
   }
 
+  get isGuest(): boolean {
+    return this.currentUser?.isGuest === true;
+  }
+
+  loginAsGuest() {
+    this.authService.loginAsGuest();
+    this.router.navigate(['/game']);
+  }
+
   logout() {
     this.authService.logout();
     this.router.navigate(['/login']);

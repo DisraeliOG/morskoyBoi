@@ -18,6 +18,9 @@ import {CommonModule, NgClass} from '@angular/common';
 })
 export class RegisterComponent implements OnInit {
   registerForm!: FormGroup;
+  errorMessage: string = '';
+  successMessage: string = '';
+  isLoading: boolean = false;
 
   constructor(
     private fb: FormBuilder,
@@ -49,15 +52,38 @@ export class RegisterComponent implements OnInit {
 
   onSubmit() {
     if (this.registerForm.valid) {
-      this.authService.register(
+      this.errorMessage = '';
+      this.successMessage = '';
+      this.isLoading = true;
+      this.registerForm.disable();
+      
+      const subscription = this.authService.register(
         this.registerForm.value.email,
         this.registerForm.value.password
-      ).subscribe(success => {
-        if (success) {
-          alert('Регистрация прошла успешно! Выполните вход.');
-          this.router.navigate(['/login']);
-        } else {
-          alert('Ошибка регистрации. Возможно, пользователь уже существует.');
+      ).subscribe({
+        next: (result) => {
+          this.isLoading = false;
+          this.registerForm.enable();
+          if (result.success) {
+            this.successMessage = 'Регистрация прошла успешно! Выполните вход.';
+            setTimeout(() => {
+              this.router.navigate(['/login']);
+            }, 2000);
+          } else {
+            this.errorMessage = result.error || 'Произошла ошибка при регистрации.';
+          }
+          subscription.unsubscribe();
+        },
+        error: (error) => {
+          this.isLoading = false;
+          this.registerForm.enable();
+          this.errorMessage = 'Произошла ошибка при подключении к серверу.';
+          console.error('Ошибка регистрации:', error);
+          subscription.unsubscribe();
+        },
+        complete: () => {
+          this.isLoading = false;
+          this.registerForm.enable();
         }
       });
     }

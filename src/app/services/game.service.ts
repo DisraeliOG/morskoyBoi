@@ -1,5 +1,5 @@
 import { Injectable, signal, WritableSignal } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { catchError, of } from 'rxjs';
 import { UserService } from './user.service';
 
@@ -19,6 +19,7 @@ export interface Game {
   turn: string;
   status: 'waiting' | 'active' | 'finished';
   winnerId: string | null;
+  shareLink?: string;
 }
 
 const BOARD_SIZE = 100;
@@ -37,81 +38,146 @@ export class GameService {
   ) {}
 
   createLobby(userId: string, userEmail: string): void {
-    this.http.get<Game[]>(API_URL).subscribe(games => {
-      const mine = games.filter(g => g.player1Id === userId || g.player2Id === userId);
-      let deleted = 0;
-      const toDelete = mine.length;
+    if (!navigator.onLine) {
+      return;
+    }
 
-      const finishCreate = () => {
-        const board = this.generateBoard();
-        this.createGameWithBoard(userId, userEmail, board);
-      };
+    this.http.get<Game[]>(API_URL).subscribe({
+      next: (games) => {
+        const mine = games.filter(g => g.player1Id === userId || g.player2Id === userId);
+        let deleted = 0;
+        const toDelete = mine.length;
 
-      if (toDelete === 0) {
-        finishCreate();
-        return;
-      }
+        const finishCreate = () => {
+          const board = this.generateBoard();
+          this.createGameWithBoard(userId, userEmail, board);
+        };
 
-      mine.forEach(g => {
-        if (g.id) {
-          this.http.delete(`${API_URL}/${g.id}`).subscribe({
-            next: () => { deleted++; if (deleted === toDelete) finishCreate(); },
-            error: () => { deleted++; if (deleted === toDelete) finishCreate(); }
-          });
-        } else {
-          deleted++; if (deleted === toDelete) finishCreate();
+        if (toDelete === 0) {
+          finishCreate();
+          return;
         }
-      });
+
+        mine.forEach(g => {
+          if (g.id) {
+            this.http.delete(`${API_URL}/${g.id}`).subscribe({
+              next: () => { deleted++; if (deleted === toDelete) finishCreate(); },
+              error: () => { deleted++; if (deleted === toDelete) finishCreate(); }
+            });
+          } else {
+            deleted++; if (deleted === toDelete) finishCreate();
+          }
+        });
+      },
+      error: (error) => {
+        if (!this.isNetworkError(error)) {
+          console.error('Ошибка при получении списка игр для создания лобби:', error);
+        }
+      }
     });
   }
 
   createLobbyWithBoard(userId: string, userEmail: string, board: Cell[]): void {
-    this.http.get<Game[]>(API_URL).subscribe(games => {
-      const mine = games.filter(g => g.player1Id === userId || g.player2Id === userId);
-      let deleted = 0;
-      const toDelete = mine.length;
+    if (!navigator.onLine) {
+      return;
+    }
 
-      const finishCreate = () => this.createGameWithBoard(userId, userEmail, board);
+    this.http.get<Game[]>(API_URL).subscribe({
+      next: (games) => {
+        const mine = games.filter(g => g.player1Id === userId || g.player2Id === userId);
+        let deleted = 0;
+        const toDelete = mine.length;
 
-      if (toDelete === 0) {
-        finishCreate();
-        return;
-      }
+        const finishCreate = () => this.createGameWithBoard(userId, userEmail, board);
 
-      mine.forEach(g => {
-        if (g.id) {
-          this.http.delete(`${API_URL}/${g.id}`).subscribe({
-            next: () => { deleted++; if (deleted === toDelete) finishCreate(); },
-            error: () => { deleted++; if (deleted === toDelete) finishCreate(); }
-          });
-        } else {
-          deleted++; if (deleted === toDelete) finishCreate();
+        if (toDelete === 0) {
+          finishCreate();
+          return;
         }
-      });
+
+        mine.forEach(g => {
+          if (g.id) {
+            this.http.delete(`${API_URL}/${g.id}`).subscribe({
+              next: () => { deleted++; if (deleted === toDelete) finishCreate(); },
+              error: () => { deleted++; if (deleted === toDelete) finishCreate(); }
+            });
+          } else {
+            deleted++; if (deleted === toDelete) finishCreate();
+          }
+        });
+      },
+      error: (error) => {
+        if (!this.isNetworkError(error)) {
+          console.error('Ошибка при получении списка игр для создания лобби:', error);
+        }
+      }
     });
   }
 
+  private isNetworkError(error: any): boolean {
+    if (error instanceof HttpErrorResponse) {
+      return error.status === 0;
+    }
+    const errorMessage = error?.message || error?.toString() || '';
+    return errorMessage.includes('ERR_INTERNET_DISCONNECTED') || 
+           errorMessage.includes('Failed to fetch') ||
+           errorMessage.includes('NetworkError') ||
+           !navigator.onLine;
+  }
+
   listWaitingGames() {
+    if (!navigator.onLine) {
+      return of([] as Game[]);
+    }
+
     return this.http.get<Game[]>(`${API_URL}?status=waiting`).pipe(
       catchError((error) => {
-        console.error('Ошибка при получении списка игр:', error);
+        if (!this.isNetworkError(error)) {
+          console.error('Ошибка при получении списка игр:', error);
+        }
         return of([] as Game[]);
       })
     );
   }
 
   joinById(gameId: string | number, userId: string, userEmail: string) {
-    this.http.get<Game>(`${API_URL}/${gameId}`).subscribe(g => {
-      if (!g || g.status !== 'waiting' || g.player1Id === userId || g.player2Id) return;
-      const board = this.generateBoard();
-      this.joinGameWithBoard(g, userId, userEmail, board);
+    if (!navigator.onLine) {
+      return;
+    }
+    this.http.get<Game>(`${API_URL}/${gameId}`).subscribe({
+      next: (g) => {
+        if (!g || g.status !== 'waiting' || g.player2Id) return;
+        if (g.player1Id === userId) {
+          return;
+        }
+        const board = this.generateBoard();
+        this.joinGameWithBoard(g, userId, userEmail, board);
+      },
+      error: (error) => {
+        if (!this.isNetworkError(error)) {
+          console.error('Ошибка при получении игры:', error);
+        }
+      }
     });
   }
 
   joinByIdWithBoard(gameId: string | number, userId: string, userEmail: string, board: Cell[]) {
-    this.http.get<Game>(`${API_URL}/${gameId}`).subscribe(g => {
-      if (!g || g.status !== 'waiting' || g.player1Id === userId || g.player2Id) return;
-      this.joinGameWithBoard(g, userId, userEmail, board);
+    if (!navigator.onLine) {
+      return;
+    }
+    this.http.get<Game>(`${API_URL}/${gameId}`).subscribe({
+      next: (g) => {
+        if (!g || g.status !== 'waiting' || g.player2Id) return;
+        if (g.player1Id === userId) {
+          return;
+        }
+        this.joinGameWithBoard(g, userId, userEmail, board);
+      },
+      error: (error) => {
+        if (!this.isNetworkError(error)) {
+          console.error('Ошибка при получении игры:', error);
+        }
+      }
     });
   }
 
@@ -121,30 +187,58 @@ export class GameService {
       this.game.set(null);
       return;
     }
+    if (!navigator.onLine) {
+      this.game.set(null);
+      return;
+    }
     this.http.delete(`${API_URL}/${game.id}`).subscribe({
       next: () => {
         this.game.set(null);
       },
       error: (error) => {
-        console.error('Ошибка при выходе из игры:', error);
+        if (!this.isNetworkError(error)) {
+          console.error('Ошибка при выходе из игры:', error);
+        }
         this.game.set(null);
       }
     });
   }
 
   resetUserGames(userId: string): void {
-    this.http.get<Game[]>(API_URL).subscribe(games => {
-      const mine = games.filter(g => g.player1Id === userId || g.player2Id === userId);
-      mine.forEach(g => {
-        if (g.id) {
-          this.http.delete(`${API_URL}/${g.id}`).subscribe();
-        }
-      });
+    if (!navigator.onLine) {
       this.game.set(null);
+      return;
+    }
+    this.http.get<Game[]>(API_URL).subscribe({
+      next: (games) => {
+        const mine = games.filter(g => g.player1Id === userId || g.player2Id === userId);
+        mine.forEach(g => {
+          if (g.id) {
+            this.http.delete(`${API_URL}/${g.id}`).subscribe({
+              error: (error) => {
+                if (!this.isNetworkError(error)) {
+                  console.error('Ошибка при удалении игры:', error);
+                }
+              }
+            });
+          }
+        });
+        this.game.set(null);
+      },
+      error: (error) => {
+        if (!this.isNetworkError(error)) {
+          console.error('Ошибка при получении списка игр для сброса:', error);
+        }
+        this.game.set(null);
+      }
     });
   }
 
   joinGameWithBoard(game: Game, userId: string, userEmail: string, board: Cell[]): void {
+    if (!navigator.onLine) {
+      return;
+    }
+
     const updatedGame = {
       ...game,
       player2Id: userId,
@@ -160,12 +254,23 @@ export class GameService {
           this.game.set(updatedGame);
         },
         error: (error) => {
-          console.error('Ошибка при присоединении к игре:', error);
+          if (!this.isNetworkError(error)) {
+            console.error('Ошибка при присоединении к игре:', error);
+          }
         }
       });
   }
 
+  generateShareLink(gameId: number | string): string {
+    const baseUrl = window.location.origin;
+    return `${baseUrl}/game?join=${gameId}`;
+  }
+
   createGameWithBoard(userId: string, userEmail: string, board: Cell[]): void {
+    if (!navigator.onLine) {
+      return;
+    }
+
     const emptyBoard = this.generateEmptyBoard();
 
     const newGame: Omit<Game, 'id'> = {
@@ -183,12 +288,51 @@ export class GameService {
     this.http.post<Game>(API_URL, newGame)
       .subscribe({
         next: (createdGame) => {
-          this.game.set(createdGame);
+          if (createdGame.id) {
+            const shareLink = this.generateShareLink(createdGame.id);
+            const updatedGame = { ...createdGame, shareLink };
+            this.http.put<Game>(`${API_URL}/${createdGame.id}`, updatedGame).subscribe({
+              next: (gameWithLink) => {
+                this.game.set(gameWithLink);
+              },
+              error: () => {
+                this.game.set(createdGame);
+              }
+            });
+          } else {
+            this.game.set(createdGame);
+          }
         },
         error: (error) => {
-          console.error('Ошибка при создании игры:', error);
+          if (!this.isNetworkError(error)) {
+            console.error('Ошибка при создании игры:', error);
+          }
         }
       });
+  }
+
+  joinByLink(gameId: string | number, userId: string, userEmail: string, board?: Cell[]): void {
+    if (!navigator.onLine) {
+      return;
+    }
+
+    this.http.get<Game>(`${API_URL}/${gameId}`).subscribe({
+      next: (g) => {
+        if (!g || g.status !== 'waiting' || g.player2Id) {
+          return;
+        }
+        if (g.player1Id === userId) {
+          return;
+        }
+        const boardToUse = board || this.generateBoard();
+        this.joinGameWithBoard(g, userId, userEmail, boardToUse);
+      },
+      error: (error) => {
+        if (!this.isNetworkError(error)) {
+          console.error('Ошибка при получении игры по ссылке:', error);
+        }
+      }
+    });
   }
 
   fire(cellIndex: number, userId: string): void {
@@ -244,13 +388,19 @@ export class GameService {
       this.updateGameStats(updatedGame);
     }
 
+    if (!navigator.onLine) {
+      return;
+    }
+
     this.http.put<Game>(`${API_URL}/${game.id}`, updatedGame)
       .subscribe({
         next: (updatedGame) => {
           this.game.set(updatedGame);
         },
         error: (error) => {
-          console.error('Ошибка при обновлении игры:', error);
+          if (!this.isNetworkError(error)) {
+            console.error('Ошибка при обновлении игры:', error);
+          }
         }
       });
   }
@@ -259,13 +409,19 @@ export class GameService {
     const game = this.game();
     if (!game) return;
 
+    if (!navigator.onLine) {
+      return;
+    }
+
     this.http.get<Game>(`${API_URL}/${game.id}`)
       .subscribe({
         next: (latestGame) => {
           this.game.set(latestGame);
         },
         error: (error) => {
-          console.error('Ошибка при получении обновлений игры:', error);
+          if (!this.isNetworkError(error)) {
+            console.error('Ошибка при получении обновлений игры:', error);
+          }
         }
       });
   }
@@ -286,8 +442,37 @@ export class GameService {
     return board;
   }
 
+  private canPlaceShipAt(board: Cell[], indexes: number[]): boolean {
+    for (const cellIndex of indexes) {
+      if (board[cellIndex].status !== 'empty') {
+        return false;
+      }
+    }
+
+    for (const cellIndex of indexes) {
+      const row = Math.floor(cellIndex / 10);
+      const col = cellIndex % 10;
+
+      for (let dr = -1; dr <= 1; dr++) {
+        for (let dc = -1; dc <= 1; dc++) {
+          const newRow = row + dr;
+          const newCol = col + dc;
+
+          if (newRow >= 0 && newRow < 10 && newCol >= 0 && newCol < 10) {
+            const neighborIndex = newRow * 10 + newCol;
+            if (!indexes.includes(neighborIndex) && board[neighborIndex].status === 'ship') {
+              return false;
+            }
+          }
+        }
+      }
+    }
+
+    return true;
+  }
+
   private placeShip(board: Cell[], length: number, shipId: number) {
-    const maxAttempts = 100;
+    const maxAttempts = 1000;
     let attempts = 0;
     while (attempts < maxAttempts) {
       attempts++;
@@ -295,16 +480,16 @@ export class GameService {
       const row = Math.floor(Math.random() * 10);
       const col = Math.floor(Math.random() * 10);
 
+      let indexes: number[];
       if (horizontal) {
         if (col + length > 10) continue;
-        const indexes = Array.from({ length }, (_, i) => row * 10 + col + i);
-        if (indexes.some(i => board[i].status !== 'empty')) continue;
-        indexes.forEach(i => board[i] = { status: 'ship', shipId });
-        return;
+        indexes = Array.from({ length }, (_, i) => row * 10 + col + i);
       } else {
         if (row + length > 10) continue;
-        const indexes = Array.from({ length }, (_, i) => (row + i) * 10 + col);
-        if (indexes.some(i => board[i].status !== 'empty')) continue;
+        indexes = Array.from({ length }, (_, i) => (row + i) * 10 + col);
+      }
+
+      if (this.canPlaceShipAt(board, indexes)) {
         indexes.forEach(i => board[i] = { status: 'ship', shipId });
         return;
       }
@@ -317,37 +502,66 @@ export class GameService {
 
   private updateGameStats(game: Game): void {
     if (!game.winnerId || !game.player1Id || !game.player2Id) return;
+    if (!navigator.onLine) return;
 
     const winnerId = game.winnerId;
     const loserId = winnerId === game.player1Id ? game.player2Id : game.player1Id;
 
-    this.http.get<any>(`http://localhost:3000/users/${winnerId}`).subscribe(winner => {
-      if (winner) {
-        const updatedWinner = {
-          ...winner,
-          wins: (winner.wins || 0) + 1
-        };
-        this.http.put(`http://localhost:3000/users/${winnerId}`, updatedWinner).subscribe(() => {
-          const currentUser = this.userService.currentUser();
-          if (currentUser && currentUser.id?.toString() === winnerId) {
-            this.userService.setUser(updatedWinner);
-          }
-        });
+    this.http.get<any>(`http://localhost:3000/users/${winnerId}`).subscribe({
+      next: (winner) => {
+        if (winner) {
+          const updatedWinner = {
+            ...winner,
+            wins: (winner.wins || 0) + 1
+          };
+          this.http.put(`http://localhost:3000/users/${winnerId}`, updatedWinner).subscribe({
+            next: () => {
+              const currentUser = this.userService.currentUser();
+              if (currentUser && currentUser.id?.toString() === winnerId) {
+                this.userService.setUser(updatedWinner);
+              }
+            },
+            error: (error) => {
+              if (!this.isNetworkError(error)) {
+                console.error('Ошибка при обновлении статистики победителя:', error);
+              }
+            }
+          });
+        }
+      },
+      error: (error) => {
+        if (!this.isNetworkError(error)) {
+          console.error('Ошибка при получении данных победителя:', error);
+        }
       }
     });
 
-    this.http.get<any>(`http://localhost:3000/users/${loserId}`).subscribe(loser => {
-      if (loser) {
-        const updatedLoser = {
-          ...loser,
-          losses: (loser.losses || 0) + 1
-        };
-        this.http.put(`http://localhost:3000/users/${loserId}`, updatedLoser).subscribe(() => {
-          const currentUser = this.userService.currentUser();
-          if (currentUser && currentUser.id?.toString() === loserId) {
-            this.userService.setUser(updatedLoser);
-          }
-        });
+    this.http.get<any>(`http://localhost:3000/users/${loserId}`).subscribe({
+      next: (loser) => {
+        if (loser) {
+          const updatedLoser = {
+            ...loser,
+            losses: (loser.losses || 0) + 1
+          };
+          this.http.put(`http://localhost:3000/users/${loserId}`, updatedLoser).subscribe({
+            next: () => {
+              const currentUser = this.userService.currentUser();
+              if (currentUser && currentUser.id?.toString() === loserId) {
+                this.userService.setUser(updatedLoser);
+              }
+            },
+            error: (error) => {
+              if (!this.isNetworkError(error)) {
+                console.error('Ошибка при обновлении статистики проигравшего:', error);
+              }
+            }
+          });
+        }
+      },
+      error: (error) => {
+        if (!this.isNetworkError(error)) {
+          console.error('Ошибка при получении данных проигравшего:', error);
+        }
       }
     });
   }

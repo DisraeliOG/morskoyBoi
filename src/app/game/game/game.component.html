@@ -1,5 +1,9 @@
 <div class="game-container">
 
+  <div *ngIf="networkErrorMessage" class="alert alert-danger mb-3" role="alert">
+    {{ networkErrorMessage }}
+  </div>
+
   <div *ngIf="game() as currentGame" class="mb-4">
     <ng-container *ngIf="currentGame.player1Id === myId || currentGame.player2Id === myId">
       <div class="d-flex justify-content-between align-items-center mb-3">
@@ -7,6 +11,15 @@
         <button class="btn btn-outline-danger btn-sm" (click)="leaveGame()">
           Выйти из игры
         </button>
+      </div>
+      
+      <div *ngIf="currentGame.status === 'waiting' && currentGame.player1Id === myId && shareLink" class="alert alert-info mb-3">
+        <strong>Пригласите друга:</strong>
+        <div class="d-flex align-items-center mt-2">
+          <input type="text" class="form-control me-2" [value]="shareLink" readonly id="shareLinkInput">
+          <button class="btn btn-primary btn-sm" (click)="copyShareLink()">Копировать</button>
+        </div>
+        <small class="text-muted d-block mt-2">Отправьте эту ссылку другу, чтобы он мог присоединиться к игре</small>
       </div>
     </ng-container>
   </div>

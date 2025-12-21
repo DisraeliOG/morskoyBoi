@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, ChangeDetectorRef } from '@angular/core';
 import {FormBuilder, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
 import {Router, RouterLink} from '@angular/router';
@@ -18,11 +18,14 @@ import {NgClass, CommonModule} from '@angular/common';
 })
 export class LoginComponent implements OnInit {
   loginForm!: FormGroup;
+  errorMessage: string = '';
+  isLoading: boolean = false;
 
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit() {
@@ -34,14 +37,37 @@ export class LoginComponent implements OnInit {
 
   onSubmit() {
     if (this.loginForm.valid) {
+      this.errorMessage = '';
+      this.isLoading = true;
+      this.loginForm.disable();
+      
       this.authService.login(
         this.loginForm.value.email,
         this.loginForm.value.password
-      ).subscribe(success => {
-        if (success) {
-          this.router.navigate(['/dashboard']);
-        } else {
-          alert('Неверный email или пароль!');
+      ).subscribe({
+        next: (result) => {
+          console.log('Login result:', result);
+          this.isLoading = false;
+          this.loginForm.enable();
+          if (result.success) {
+            this.router.navigate(['/dashboard']);
+          } else {
+            this.errorMessage = result.error || 'Произошла ошибка при входе.';
+          }
+          this.cdr.detectChanges();
+        },
+        error: (error) => {
+          console.error('Login error:', error);
+          this.isLoading = false;
+          this.loginForm.enable();
+          this.errorMessage = 'Произошла ошибка при подключении к серверу.';
+          this.cdr.detectChanges();
+        },
+        complete: () => {
+          console.log('Login complete');
+          this.isLoading = false;
+          this.loginForm.enable();
+          this.cdr.detectChanges();
         }
       });
     }

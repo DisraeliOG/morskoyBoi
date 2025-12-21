@@ -4,6 +4,10 @@
       <div class="card p-4">
         <h2 class="text-center">🚪 Вход в систему</h2>
 
+        <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
+          {{ errorMessage }}
+        </div>
+
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
 
           <div class="mb-3">
@@ -36,8 +40,9 @@
             </div>
           </div>
 
-          <button type="submit" [disabled]="loginForm.invalid" class="btn btn-primary w-100">
-            Войти
+          <button type="submit" [disabled]="loginForm.invalid || isLoading" class="btn btn-primary w-100">
+            <span *ngIf="isLoading">Вход...</span>
+            <span *ngIf="!isLoading">Войти</span>
           </button>
         </form>
 

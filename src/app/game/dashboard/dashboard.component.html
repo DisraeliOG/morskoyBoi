@@ -1,6 +1,10 @@
 <div class="container mt-4">
   <h2>📊 Статистика и таблица лидеров</h2>
 
+  <div *ngIf="errorMessage" class="alert alert-danger" role="alert">
+    {{ errorMessage }}
+  </div>
+
   <div class="row">
 
     <div class="col-md-6 mb-4">
